@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import type { CreatePasteRequest, CreatePasteResponse, StoredPaste } from '~/types/paste'
 
 export default defineEventHandler(async (event): Promise<CreatePasteResponse> => {
@@ -24,7 +23,7 @@ export default defineEventHandler(async (event): Promise<CreatePasteResponse> =>
     throw createError({ statusCode: 413, message: `Secret is too large. Maximum size is ${maxPasteSize} bytes.` })
   }
 
-  const id = nanoid(21)
+  const id = createSecretId()
   const now = Date.now()
   const expiresAt = now + ttlSeconds * 1000
   const passwordProtected = Boolean(body.passwordHash && body.passwordSalt)

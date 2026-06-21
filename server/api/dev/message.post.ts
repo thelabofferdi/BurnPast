@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import type { SendDeveloperMessageRequest, SendDeveloperMessageResponse, StoredDeveloperMessage } from '~/types/dev'
 
 export default defineEventHandler(async (event): Promise<SendDeveloperMessageResponse> => {
@@ -31,7 +30,7 @@ export default defineEventHandler(async (event): Promise<SendDeveloperMessageRes
     throw createError({ statusCode: 413, message: `Secret is too large. Maximum size is ${maxPasteSize} bytes.` })
   }
 
-  const id = nanoid(21)
+  const id = createSecretId()
   const now = Date.now()
   const expiresAt = now + ttlSeconds * 1000
   const message: StoredDeveloperMessage = {
