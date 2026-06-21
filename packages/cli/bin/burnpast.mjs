@@ -35,7 +35,7 @@ Commands:
   burnpast send --to @bob ./file.env
   burnpast inbox [--json]
   burnpast watch [--interval 5] [--once] [--reveal]
-  burnpast reveal <message-id> [--copy]
+  burnpast reveal [message-id|number|latest] [--copy]
   burnpast trust @bob
 
 Environment:
@@ -115,8 +115,8 @@ const normalizeAlias = (value) => {
   return alias.toLowerCase()
 }
 
-const prompt = async (question) => {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+const prompt = async (question, output = process.stdout) => {
+  const rl = readline.createInterface({ input: process.stdin, output })
 
   try {
     return await rl.question(question)
@@ -456,15 +456,60 @@ const fetchInbox = async (flags = {}) => {
   })
 }
 
-const printInbox = (messages) => {
+const writeLine = (stream, line = '') => {
+  stream.write(`${line}\n`)
+}
+
+const printInbox = (messages, stream = process.stdout) => {
   if (!messages.length) {
-    console.log('No pending secrets.')
+    writeLine(stream, 'No pending secrets.')
     return
   }
 
-  for (const message of messages) {
-    console.log(`${message.id}  from ${message.sender}  expires ${formatTimeLeft(message.expiresAt)}  ${message.burnAfterReading ? 'burn' : 'kept'}  ${message.size} bytes`)
+  messages.forEach((message, index) => {
+    writeLine(
+      stream,
+      `${index + 1}. ${message.id}  from ${message.sender}  expires ${formatTimeLeft(message.expiresAt)}  ${message.burnAfterReading ? 'burn' : 'kept'}  ${message.size} bytes`
+    )
+  })
+}
+
+const isInboxPosition = (value) => /^[1-9]\d*$/.test(String(value || ''))
+
+const resolveInboxMessageId = async (selector, flags = {}) => {
+  const inbox = await fetchInbox(flags)
+  const messages = inbox.messages
+
+  if (!messages.length) {
+    console.error('No pending secrets.')
+    return null
   }
+
+  if (!selector || selector === 'latest' || selector === 'next') {
+    if (messages.length === 1 || selector) return messages[0].id
+
+    if (!process.stdin.isTTY) {
+      printInbox(messages, process.stderr)
+      throw new CliError('Multiple pending secrets. Run: burnpast reveal <number>')
+    }
+
+    printInbox(messages, process.stderr)
+    const answer = await prompt(`Reveal which secret? [1-${messages.length}]: `, process.stderr)
+    selector = answer.trim()
+  }
+
+  if (!isInboxPosition(selector)) {
+    throw new CliError(`Invalid inbox number: ${selector}`)
+  }
+
+  const index = Number(selector) - 1
+  const message = messages[index]
+
+  if (!message) {
+    throw new CliError(`Inbox number ${selector} is out of range. Run: burnpast inbox`)
+  }
+
+  return message.id
 }
 
 const commandInbox = async (argv) => {
@@ -509,9 +554,12 @@ const revealMessage = async (id, flags = {}) => {
 
 const commandReveal = async (argv) => {
   const { flags, positionals } = parseArgs(argv)
-  const id = positionals[0]
+  const selector = positionals[0]
+  const id = selector && !isInboxPosition(selector) && selector !== 'latest' && selector !== 'next'
+    ? selector
+    : await resolveInboxMessageId(selector, flags)
 
-  if (!id) throw new CliError('Message ID is required.')
+  if (!id) return
   await revealMessage(id, flags)
 }
 

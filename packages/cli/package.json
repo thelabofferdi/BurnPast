@@ -1,6 +1,6 @@
 {
   "name": "burnpast",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Developer CLI for BurnPast encrypted secret sharing.",
   "type": "module",
   "license": "MIT",

@@ -28,8 +28,14 @@ burnpast init
 burnpast watch
 burnpast send --to @bob --clipboard
 burnpast send --to @bob --text "demo-secret-token"
-burnpast reveal <message-id>
+burnpast inbox
+burnpast reveal
+burnpast reveal 1
+burnpast reveal latest
 ```
+
+`burnpast reveal` reveals the only pending secret. If multiple secrets are pending,
+use the number shown by `burnpast inbox`, for example `burnpast reveal 1`.
 
 `burnpaste` is kept as a compatibility alias.
 
