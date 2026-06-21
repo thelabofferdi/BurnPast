@@ -35,7 +35,7 @@ burnpast reveal <message-id>
 
 ## Server
 
-By default, the CLI uses `http://127.0.0.1:3000`. Point it at another BurnPast API with:
+By default, the CLI uses `https://burnpast.enarilab.xyz`. Point it at another BurnPast API with:
 
 ```bash
 BURNPAST_API_URL=https://your-burnpast.example

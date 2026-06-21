@@ -11,7 +11,7 @@ const subtle = crypto.subtle
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-const DEFAULT_SERVER = 'http://127.0.0.1:3000'
+const DEFAULT_SERVER = 'https://burnpast.enarilab.xyz'
 const DEFAULT_EXPIRES = '1h'
 const CONFIG_DIR = process.env.BURNPAST_HOME || process.env.BURNPASTE_HOME || path.join(os.homedir(), '.burnpast')
 const IDENTITY_FILE = path.join(CONFIG_DIR, 'identity.json')
@@ -28,7 +28,7 @@ const help = `BurnPast developer CLI
 
 Commands:
   burnpast init
-  burnpast init --alias @alice [--server http://127.0.0.1:3000]
+  burnpast init --alias @alice [--server https://burnpast.enarilab.xyz]
   burnpast whoami
   burnpast send --to @bob --text "secret" [--expires 10m] [--no-burn]
   burnpast send --to @bob --clipboard
