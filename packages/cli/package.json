@@ -1,0 +1,38 @@
+{
+  "name": "burnpast",
+  "version": "0.1.0",
+  "description": "Developer CLI for BurnPast encrypted secret sharing.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thelabofferdi/BurnPast.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/thelabofferdi/BurnPast/issues"
+  },
+  "homepage": "https://github.com/thelabofferdi/BurnPast#readme",
+  "keywords": [
+    "secret-sharing",
+    "encryption",
+    "cli",
+    "terminal",
+    "burnpast"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "bin": {
+    "burnpast": "bin/burnpast",
+    "burnpaste": "bin/burnpaste"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

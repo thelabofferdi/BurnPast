@@ -25,10 +25,23 @@ Open `http://localhost:3000`.
 
 ## CLI
 
-Expose the command locally:
+Install from npm:
 
 ```bash
-npm link
+npm install -g burnpast
+```
+
+Install in a project:
+
+```bash
+npm install burnpast
+npx burnpast help
+```
+
+Use once without a global install:
+
+```bash
+npx burnpast help
 ```
 
 Create an identity:

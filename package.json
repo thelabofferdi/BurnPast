@@ -1,9 +1,12 @@
 {
-  "name": "burnpast",
+  "name": "burnpast-web",
   "version": "0.1.0",
   "description": "Encrypted expiring secret sharing for web and developer CLI workflows.",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "packages/cli"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,16 +26,14 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "bin": {
-    "burnpast": "./bin/burnpast",
-    "burnpaste": "./bin/burnpaste"
-  },
   "scripts": {
     "build": "nuxt build",
-    "cli": "node bin/burnpast.mjs",
+    "cli": "node packages/cli/bin/burnpast.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "pack:cli": "npm pack --workspace burnpast",
     "preview": "nuxt preview",
+    "publish:cli": "npm publish --workspace burnpast",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
