@@ -4,6 +4,20 @@ Encrypted, expiring secret sharing for the web and terminal.
 
 BurnPast stores ciphertext, not plaintext. Web links keep the AES key in the URL fragment, and the developer CLI encrypts messages for a recipient public key before sending them to the API.
 
+## Use BurnPast
+
+Open the hosted web app:
+
+**https://burnpast.enarilab.xyz**
+
+Install the developer CLI from npm:
+
+```bash
+npm install -g burnpast
+```
+
+The CLI uses the hosted BurnPast API by default, so developers can send encrypted secrets from the terminal without opening the browser.
+
 ## Features
 
 - Web app for encrypted one-time secret links
@@ -67,8 +81,13 @@ burnpast send --to @bob .env
 Reveal a secret:
 
 ```bash
-burnpast reveal <message-id>
+burnpast inbox
+burnpast reveal
+burnpast reveal 1
+burnpast reveal latest
 ```
+
+`burnpast reveal` reveals the only pending secret. If several secrets are waiting, use the number shown by `burnpast inbox`.
 
 `burnpaste` is kept as a compatibility alias.
 
