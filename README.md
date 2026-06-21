@@ -77,6 +77,7 @@ burnpast reveal <message-id>
 ```env
 SITE_URL=http://localhost:3000
 
+REDIS_URL=
 UPSTASH_REDIS_URL=
 UPSTASH_REDIS_TOKEN=
 
@@ -89,7 +90,7 @@ RATE_LIMIT_REQUESTS=10
 RATE_LIMIT_WINDOW=3600
 ```
 
-Local development can use memory storage. Shared deployments should use Redis and HTTPS.
+Local development can use memory storage. Shared deployments should use Redis or Upstash and HTTPS.
 
 ## Scripts
 

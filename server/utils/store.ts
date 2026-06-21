@@ -1,4 +1,5 @@
-import { Redis } from '@upstash/redis'
+import { Redis as UpstashRedis } from '@upstash/redis'
+import { createClient } from '@redis/client'
 import type { DeveloperIdentity, StoredDeveloperMessage } from '~/types/dev'
 import type { StoredPaste } from '~/types/paste'
 
@@ -31,6 +32,7 @@ type Store = {
 }
 
 let redisStore: Store | null = null
+let localRedisStore: Store | null = null
 let memoryStore: Store | null = null
 
 const getGlobalState = (): GlobalState => {
@@ -175,7 +177,7 @@ const createMemoryStore = (): Store => {
   }
 }
 
-const createRedisStore = (redis: Redis): Store => ({
+const createUpstashRedisStore = (redis: UpstashRedis): Store => ({
   async putPaste(id, data, ttlSeconds) {
     await redis.set(`paste:${id}`, data, { ex: ttlSeconds })
   },
@@ -255,12 +257,140 @@ const createRedisStore = (redis: Redis): Store => ({
   }
 })
 
+const parseJson = <T>(value: string | null): T | null => {
+  if (!value) return null
+  return JSON.parse(value) as T
+}
+
+const createLocalRedisStore = (url: string): Store => {
+  const client = createClient({ url })
+  let connectPromise: ReturnType<typeof client.connect> | null = null
+
+  client.on('error', (error) => {
+    console.error('[burnpast] Redis connection error:', error instanceof Error ? error.message : error)
+  })
+
+  const getClient = async () => {
+    if (client.isOpen) return client
+
+    connectPromise ||= client.connect().catch((error) => {
+      connectPromise = null
+      throw error
+    })
+    await connectPromise
+
+    return client
+  }
+
+  return {
+    async putPaste(id, data, ttlSeconds) {
+      const redis = await getClient()
+      await redis.set(`paste:${id}`, JSON.stringify(data), { EX: ttlSeconds })
+    },
+
+    async getPaste(id) {
+      const redis = await getClient()
+      return parseJson<StoredPaste>(await redis.get(`paste:${id}`))
+    },
+
+    async deletePaste(id) {
+      const redis = await getClient()
+      await redis.del(`paste:${id}`)
+    },
+
+    async consumePaste(id) {
+      const redis = await getClient()
+      const value = await redis.sendCommand(['GETDEL', `paste:${id}`])
+      return parseJson<StoredPaste>(value as string | null)
+    },
+
+    async putIdentityIfAbsent(identity) {
+      const redis = await getClient()
+      const result = await redis.set(`dev:identity:${identity.alias}`, JSON.stringify(identity), { NX: true })
+      return result === 'OK'
+    },
+
+    async getIdentity(alias) {
+      const redis = await getClient()
+      return parseJson<DeveloperIdentity>(await redis.get(`dev:identity:${alias}`))
+    },
+
+    async putDeveloperMessage(message, ttlSeconds) {
+      const redis = await getClient()
+      await redis.set(`dev:message:${message.id}`, JSON.stringify(message), { EX: ttlSeconds })
+      await redis.lPush(`dev:inbox:${message.recipient}`, message.id)
+      await redis.expire(`dev:inbox:${message.recipient}`, 30 * 24 * 60 * 60)
+    },
+
+    async getDeveloperMessage(id) {
+      const redis = await getClient()
+      return parseJson<StoredDeveloperMessage>(await redis.get(`dev:message:${id}`))
+    },
+
+    async deleteDeveloperMessage(id) {
+      const redis = await getClient()
+      const message = parseJson<StoredDeveloperMessage>(await redis.get(`dev:message:${id}`))
+      await redis.del(`dev:message:${id}`)
+
+      if (message) {
+        await redis.lRem(`dev:inbox:${message.recipient}`, 0, id)
+      }
+    },
+
+    async consumeDeveloperMessage(id) {
+      const redis = await getClient()
+      const value = await redis.sendCommand(['GETDEL', `dev:message:${id}`])
+      const message = parseJson<StoredDeveloperMessage>(value as string | null)
+
+      if (message) {
+        await redis.lRem(`dev:inbox:${message.recipient}`, 0, id)
+      }
+
+      return message
+    },
+
+    async listDeveloperMessages(alias, limit) {
+      const redis = await getClient()
+      const ids = await redis.lRange(`dev:inbox:${alias}`, 0, Math.max(limit * 3, limit) - 1)
+      const messages: StoredDeveloperMessage[] = []
+
+      for (const id of ids) {
+        const message = parseJson<StoredDeveloperMessage>(await redis.get(`dev:message:${id}`))
+        if (message) messages.push(message)
+        if (messages.length >= limit) break
+      }
+
+      return messages
+    },
+
+    async increment(key, ttlSeconds) {
+      const redis = await getClient()
+      const redisKey = `rate:${key}`
+      const count = await redis.incr(redisKey)
+
+      if (count === 1) {
+        await redis.expire(redisKey, ttlSeconds)
+      }
+
+      return count
+    }
+  }
+}
+
 export const getStore = (): Store => {
   const config = useRuntimeConfig()
 
+  if (config.redisUrl) {
+    if (!localRedisStore) {
+      localRedisStore = createLocalRedisStore(config.redisUrl)
+    }
+
+    return localRedisStore
+  }
+
   if (config.upstashRedisUrl && config.upstashRedisToken) {
     if (!redisStore) {
-      redisStore = createRedisStore(new Redis({
+      redisStore = createUpstashRedisStore(new UpstashRedis({
         url: config.upstashRedisUrl,
         token: config.upstashRedisToken
       }))

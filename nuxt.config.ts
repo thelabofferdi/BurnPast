@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    redisUrl: process.env.REDIS_URL || '',
     upstashRedisUrl: process.env.UPSTASH_REDIS_URL || '',
     upstashRedisToken: process.env.UPSTASH_REDIS_TOKEN || '',
     allowMemoryStorage: process.env.ALLOW_MEMORY_STORAGE === 'true' || process.env.NODE_ENV !== 'production',
