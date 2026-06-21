@@ -37,9 +37,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/fonts": "^0.13.0",
-    "@nuxt/icon": "^2.2.1",
-    "@nuxt/ui": "^4.4.0",
+    "@nuxt/fonts": "^0.14.0",
+    "@nuxt/icon": "^2.2.3",
+    "@nuxt/ui": "^4.9.0",
     "@redis/client": "^6.0.0",
     "@upstash/redis": "^1.38.0",
     "nanoid": "^5.1.6",
