@@ -4,8 +4,9 @@ import type { H3Event } from 'h3'
 export const getClientIP = (event: H3Event): string => {
   const config = useRuntimeConfig()
   const headers = getHeaders(event)
+  const trustProxy = runtimeBoolean(config.trustProxy, ['TRUST_PROXY', 'NUXT_TRUST_PROXY'])
 
-  if (config.trustProxy) {
+  if (trustProxy) {
     const forwarded = headers['x-forwarded-for']
     if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown'
     if (headers['x-real-ip']) return headers['x-real-ip']

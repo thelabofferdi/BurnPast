@@ -2,11 +2,12 @@ import type { RevealDeveloperMessageResponse } from '~/types/dev'
 
 export default defineEventHandler(async (event): Promise<RevealDeveloperMessageResponse> => {
   const config = useRuntimeConfig()
-  const maxRequestBodySize = Number(config.maxRequestBodySize)
+  const maxRequestBodySize = runtimeNumber(config.maxRequestBodySize, ['MAX_REQUEST_BODY_SIZE', 'NUXT_MAX_REQUEST_BODY_SIZE'], 262144)
+  const rateLimitWindow = runtimeNumber(config.rateLimitWindow, ['RATE_LIMIT_WINDOW', 'NUXT_RATE_LIMIT_WINDOW'], 3600)
   const identity = await authenticateDeveloper(event)
   const id = assertValidDeveloperMessageId(getRouterParam(event, 'id'))
 
-  if (await isRateLimited(event, 'dev-reveal', 120, Number(config.rateLimitWindow))) {
+  if (await isRateLimited(event, 'dev-reveal', 120, rateLimitWindow)) {
     throw createError({ statusCode: 429, message: 'Too many developer reveal requests. Try again later.' })
   }
 

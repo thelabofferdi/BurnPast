@@ -3,10 +3,11 @@ import type { CreatePasteRequest, CreatePasteResponse, StoredPaste } from '~/typ
 
 export default defineEventHandler(async (event): Promise<CreatePasteResponse> => {
   const config = useRuntimeConfig()
-  const maxPasteSize = Number(config.maxPasteSize)
-  const rateLimitRequests = Number(config.rateLimitRequests)
-  const rateLimitWindow = Number(config.rateLimitWindow)
-  const maxRequestBodySize = Number(config.maxRequestBodySize)
+  const maxPasteSize = runtimeNumber(config.maxPasteSize, ['MAX_PASTE_SIZE', 'NUXT_MAX_PASTE_SIZE'], 102400)
+  const rateLimitRequests = runtimeNumber(config.rateLimitRequests, ['RATE_LIMIT_REQUESTS', 'NUXT_RATE_LIMIT_REQUESTS'], 10)
+  const rateLimitWindow = runtimeNumber(config.rateLimitWindow, ['RATE_LIMIT_WINDOW', 'NUXT_RATE_LIMIT_WINDOW'], 3600)
+  const maxRequestBodySize = runtimeNumber(config.maxRequestBodySize, ['MAX_REQUEST_BODY_SIZE', 'NUXT_MAX_REQUEST_BODY_SIZE'], 262144)
+  const siteUrl = runtimeString(config.public.siteUrl, ['SITE_URL', 'NUXT_PUBLIC_SITE_URL'], 'http://localhost:3000')
 
   if (await isRateLimited(event, 'create', rateLimitRequests, rateLimitWindow)) {
     throw createError({ statusCode: 429, message: 'Too many secrets created. Try again later.' })
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event): Promise<CreatePasteResponse> =>
 
   return {
     id,
-    url: `${config.public.siteUrl}/${id}`,
+    url: `${siteUrl}/${id}`,
     expiresAt
   }
 })

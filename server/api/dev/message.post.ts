@@ -3,10 +3,13 @@ import type { SendDeveloperMessageRequest, SendDeveloperMessageResponse, StoredD
 
 export default defineEventHandler(async (event): Promise<SendDeveloperMessageResponse> => {
   const config = useRuntimeConfig()
-  const maxRequestBodySize = Number(config.maxRequestBodySize)
+  const maxRequestBodySize = runtimeNumber(config.maxRequestBodySize, ['MAX_REQUEST_BODY_SIZE', 'NUXT_MAX_REQUEST_BODY_SIZE'], 262144)
+  const maxPasteSize = runtimeNumber(config.maxPasteSize, ['MAX_PASTE_SIZE', 'NUXT_MAX_PASTE_SIZE'], 102400)
+  const rateLimitRequests = runtimeNumber(config.rateLimitRequests, ['RATE_LIMIT_REQUESTS', 'NUXT_RATE_LIMIT_REQUESTS'], 10)
+  const rateLimitWindow = runtimeNumber(config.rateLimitWindow, ['RATE_LIMIT_WINDOW', 'NUXT_RATE_LIMIT_WINDOW'], 3600)
   const sender = await authenticateDeveloper(event)
 
-  if (await isRateLimited(event, 'dev-send', Number(config.rateLimitRequests), Number(config.rateLimitWindow))) {
+  if (await isRateLimited(event, 'dev-send', rateLimitRequests, rateLimitWindow)) {
     throw createError({ statusCode: 429, message: 'Too many developer secrets sent. Try again later.' })
   }
 
@@ -23,7 +26,6 @@ export default defineEventHandler(async (event): Promise<SendDeveloperMessageRes
   const wrappedKey = assertBase64Url(body.wrappedKey, 'Wrapped key')
   const ttlSeconds = normalizeDeveloperTtl(body.expiresIn)
   const size = Number(body.size)
-  const maxPasteSize = Number(config.maxPasteSize)
 
   if (!Number.isInteger(size) || size < 1 || size > maxPasteSize) {
     throw createError({ statusCode: 413, message: `Secret is too large. Maximum size is ${maxPasteSize} bytes.` })

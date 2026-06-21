@@ -379,27 +379,31 @@ const createLocalRedisStore = (url: string): Store => {
 
 export const getStore = (): Store => {
   const config = useRuntimeConfig()
+  const redisUrl = runtimeString(config.redisUrl, ['REDIS_URL', 'NUXT_REDIS_URL'])
+  const upstashRedisUrl = runtimeString(config.upstashRedisUrl, ['UPSTASH_REDIS_URL', 'NUXT_UPSTASH_REDIS_URL'])
+  const upstashRedisToken = runtimeString(config.upstashRedisToken, ['UPSTASH_REDIS_TOKEN', 'NUXT_UPSTASH_REDIS_TOKEN'])
+  const allowMemoryStorage = runtimeBoolean(config.allowMemoryStorage, ['ALLOW_MEMORY_STORAGE', 'NUXT_ALLOW_MEMORY_STORAGE'])
 
-  if (config.redisUrl) {
+  if (redisUrl) {
     if (!localRedisStore) {
-      localRedisStore = createLocalRedisStore(config.redisUrl)
+      localRedisStore = createLocalRedisStore(redisUrl)
     }
 
     return localRedisStore
   }
 
-  if (config.upstashRedisUrl && config.upstashRedisToken) {
+  if (upstashRedisUrl && upstashRedisToken) {
     if (!redisStore) {
       redisStore = createUpstashRedisStore(new UpstashRedis({
-        url: config.upstashRedisUrl,
-        token: config.upstashRedisToken
+        url: upstashRedisUrl,
+        token: upstashRedisToken
       }))
     }
 
     return redisStore
   }
 
-  if (!config.allowMemoryStorage) {
+  if (!allowMemoryStorage) {
     throw createError({ statusCode: 503, message: 'Persistent storage is not configured' })
   }
 
