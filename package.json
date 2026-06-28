@@ -42,7 +42,7 @@
     "@nuxt/ui": "^4.4.0",
     "@redis/client": "^6.0.0",
     "@upstash/redis": "^1.38.0",
-    "nanoid": "^5.1.6",
+    "nanoid": "^5.1.16",
     "nuxt": "^4.3.0",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
